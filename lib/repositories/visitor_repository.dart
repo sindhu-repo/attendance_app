@@ -16,9 +16,9 @@ String _localTime(DateTime dt) {
   return '$h:$m:$s';
 }
 
-// Returns UTC timestamp without milliseconds: 2026-06-25T12:23:16Z
-String _utcTimestamp(DateTime dt) =>
-    '${dt.toUtc().toIso8601String().split('.').first}Z';
+// Returns local datetime as yyyy-MM-ddTHH:mm:ss — no timezone offset, no milliseconds.
+String _localTimestamp(DateTime dt) =>
+    DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
 
 class VisitorRepository {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
@@ -42,7 +42,7 @@ class VisitorRepository {
         visitor.meetEmployee,
         _dateFmt.format(now),
         _localTime(now),
-        _utcTimestamp(now),
+        _localTimestamp(now),
       ],
     );
   }

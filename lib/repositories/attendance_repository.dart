@@ -16,9 +16,9 @@ String _localTime(DateTime dt) {
   return '$h:$m:$s';
 }
 
-// Returns UTC timestamp without milliseconds: 2026-06-25T12:23:16Z
-String _utcTimestamp(DateTime dt) =>
-    '${dt.toUtc().toIso8601String().split('.').first}Z';
+// Returns local datetime as yyyy-MM-ddTHH:mm:ss — no timezone offset, no milliseconds.
+String _localTimestamp(DateTime dt) =>
+    DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
 
 class AttendanceRepository {
   static final _dateFmt = DateFormat('yyyy-MM-dd');
@@ -54,8 +54,8 @@ class AttendanceRepository {
         employeeName,
         _dateFmt.format(now),
         _localTime(now),
-        _utcTimestamp(now),
-        _utcTimestamp(now),
+        _localTimestamp(now),
+        _localTimestamp(now),
       ],
     );
   }
@@ -70,7 +70,7 @@ class AttendanceRepository {
     final now = DateTime.now();
     await powerSyncDb.execute(
       'UPDATE attendance SET sign_out_time = ?, updated_at = ? WHERE id = ?',
-      [_localTime(now), _utcTimestamp(now), id],
+      [_localTime(now), _localTimestamp(now), id],
     );
   }
 }
