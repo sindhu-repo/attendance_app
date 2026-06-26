@@ -131,7 +131,7 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                               compact: isCompact,
                               subtitle: isVerified
                                   ? 'Record your attendance for today'
-                                  : 'Enter your name to continue',
+                                  : 'Enter your name or Employee ID to continue',
                             ),
                             SizedBox(height: isCompact ? 12 : 28),
                             if (isVerified)
@@ -539,28 +539,26 @@ class _LookupFormState extends State<_LookupForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        RawAutocomplete<String>(
+        RawAutocomplete<Employee>(
           textEditingController: widget.idCtrl,
           focusNode: _focusNode,
           optionsBuilder: (TextEditingValue value) async {
             final query = value.text.trim();
-            if (query.length < 3) return const [];
+            if (query.length < 2) return const [];
             try {
-              final results =
-                  await widget.provider.searchEmployees(query);
-              return results.map((e) => e.employeeName);
+              return await widget.provider.searchEmployees(query);
             } catch (_) {
               return const [];
             }
           },
-          displayStringForOption: (option) => option,
+          displayStringForOption: (e) => e.employeeName,
           fieldViewBuilder: (_, controller, focusNode, onFieldSubmitted) {
             return TextFormField(
               controller: controller,
               focusNode: focusNode,
               decoration: const InputDecoration(
-                labelText: 'Employee Name',
-                hintText: 'Enter your full name',
+                labelText: 'Employee Name or ID',
+                hintText: 'Enter your name or Employee ID',
                 prefixIcon: Icon(Icons.person_outline_rounded),
               ),
               textCapitalization: TextCapitalization.words,
@@ -588,16 +586,23 @@ class _LookupFormState extends State<_LookupForm> {
                       separatorBuilder: (_, _) =>
                           const Divider(height: 1, indent: 48),
                       itemBuilder: (context, index) {
-                        final name = options.elementAt(index);
+                        final emp = options.elementAt(index);
                         return ListTile(
                           leading: const Icon(Icons.person_rounded,
                               color: AppColors.employee, size: 20),
-                          title: Text(name,
+                          title: Text(emp.employeeName,
                               style: const TextStyle(
                                   fontSize: 14,
                                   color: AppColors.textPrimary)),
+                          subtitle: Text(emp.employeeId,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary)),
                           dense: true,
-                          onTap: () => onSelected(name),
+                          onTap: () {
+                            widget.provider.selectEmployee(emp);
+                            onSelected(emp);
+                          },
                         );
                       },
                     ),

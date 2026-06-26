@@ -29,7 +29,7 @@ class Attendance {
         : DateTime.parse(rawDate.toString());
 
     return Attendance(
-      id: map['id'] as String,
+      id: map['id'].toString(),
       employeeId: map['employee_id'] as String,
       employeeName: map['employee_name'] as String,
       attendanceDate: attendanceDate,

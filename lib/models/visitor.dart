@@ -26,7 +26,7 @@ class Visitor {
   factory Visitor.fromMap(Map<String, dynamic> map) {
     final rawDate = map['visit_date'];
     return Visitor(
-      id: map['id'] as String?,
+      id: map['id']?.toString(),
       visitorName: map['visitor_name'] as String? ?? '',
       contactNumber: map['contact_number'] as String? ?? '',
       company: map['company'] as String? ?? '',

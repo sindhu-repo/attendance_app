@@ -12,6 +12,7 @@ class EmployeeProvider extends ChangeNotifier {
 
   EmployeeStatus _status = EmployeeStatus.initial;
   Employee? _employee;
+  Employee? _pendingEmployee; // set when user picks from autocomplete dropdown
   Attendance? _todayAttendance;
   String _errorMessage = '';
   bool _isProcessing = false;
@@ -41,17 +42,30 @@ class EmployeeProvider extends ChangeNotifier {
   Future<List<Employee>> searchEmployees(String query) =>
       _employeeRepo.searchByName(query);
 
+  /// Called when the user taps a specific employee in the autocomplete dropdown.
+  /// Stores the exact employee so [validateEmployee] can skip the re-lookup.
+  void selectEmployee(Employee employee) {
+    _pendingEmployee = employee;
+  }
+
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  /// Looks up an employee by [name] and loads today's attendance.
-  Future<bool> validateEmployee(String name) async {
+  /// Looks up an employee by [nameOrId] and loads today's attendance.
+  /// If the user selected from the autocomplete dropdown, uses that employee
+  /// directly instead of re-querying (avoids wrong match on duplicate names).
+  Future<bool> validateEmployee(String nameOrId) async {
     _setStatus(EmployeeStatus.loading);
 
     try {
-      _employee = await _employeeRepo.findByName(name.trim());
+      if (_pendingEmployee != null) {
+        _employee = _pendingEmployee;
+        _pendingEmployee = null;
+      } else {
+        _employee = await _employeeRepo.findByName(nameOrId.trim());
+      }
 
       if (_employee == null) {
-        _setError('Employee not found. Please check your name and try again.');
+        _setError('Employee not found. Please check your name or ID and try again.');
         return false;
       }
 
@@ -60,6 +74,7 @@ class EmployeeProvider extends ChangeNotifier {
       _setStatus(EmployeeStatus.verified);
       return true;
     } catch (e) {
+      _pendingEmployee = null;
       _setError('Database error: ${e.toString()}');
       return false;
     }
@@ -90,6 +105,7 @@ class EmployeeProvider extends ChangeNotifier {
   void reset() {
     _status = EmployeeStatus.initial;
     _employee = null;
+    _pendingEmployee = null;
     _todayAttendance = null;
     _errorMessage = '';
     _isProcessing = false;

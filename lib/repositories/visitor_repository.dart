@@ -1,27 +1,23 @@
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/visitor.dart';
 import '../services/demo_store.dart';
-import '../services/powersync_database.dart';
 import '../utils/app_config.dart';
 
-const _uuid = Uuid();
-
-// Returns local time as HH:mm:ss — no date, no milliseconds.
-String _localTime(DateTime dt) {
-  final h = dt.hour.toString().padLeft(2, '0');
-  final m = dt.minute.toString().padLeft(2, '0');
-  final s = dt.second.toString().padLeft(2, '0');
-  return '$h:$m:$s';
-}
-
-// Returns local datetime as yyyy-MM-ddTHH:mm:ss — no timezone offset, no milliseconds.
-String _localTimestamp(DateTime dt) =>
-    DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
-
 class VisitorRepository {
+  final _db = Supabase.instance.client;
   static final _dateFmt = DateFormat('yyyy-MM-dd');
+
+  static String _localTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    final s = dt.second.toString().padLeft(2, '0');
+    return '$h:$m:$s';
+  }
+
+  static String _localTimestamp(DateTime dt) =>
+      DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(dt);
 
   Future<void> checkIn(Visitor visitor) async {
     if (AppConfig.demoMode) {
@@ -29,22 +25,17 @@ class VisitorRepository {
       DemoStore.visitorCheckIn(visitor);
       return;
     }
-
     final now = DateTime.now();
-    await powerSyncDb.execute(
-      'INSERT INTO visitors (id, visitor_name, contact_number, company, purpose, meet_employee, visit_date, check_in_time, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        _uuid.v4(),
-        visitor.visitorName,
-        visitor.contactNumber,
-        visitor.company,
-        visitor.purpose,
-        visitor.meetEmployee,
-        _dateFmt.format(now),
-        _localTime(now),
-        _localTimestamp(now),
-      ],
-    );
+    await _db.from('visitors').insert({
+      'visitor_name': visitor.visitorName,
+      'contact_number': visitor.contactNumber,
+      'company': visitor.company,
+      'purpose': visitor.purpose,
+      'meet_employee': visitor.meetEmployee,
+      'visit_date': _dateFmt.format(now),
+      'check_in_time': _localTime(now),
+      'created_at': _localTimestamp(now),
+    });
   }
 
   Future<Visitor?> findActiveByContact(String contactNumber) async {
@@ -52,13 +43,15 @@ class VisitorRepository {
       await Future.delayed(const Duration(milliseconds: 600));
       return DemoStore.findActiveVisitorByContact(contactNumber);
     }
-
-    final row = await powerSyncDb.getOptional(
-      'SELECT * FROM visitors WHERE contact_number = ? AND check_out_time IS NULL ORDER BY created_at DESC LIMIT 1',
-      [contactNumber.trim()],
-    );
-    if (row == null) return null;
-    return Visitor.fromMap(row);
+    final rows = await _db
+        .from('visitors')
+        .select()
+        .eq('contact_number', contactNumber.trim())
+        .isFilter('check_out_time', null)
+        .order('created_at', ascending: false)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return Visitor.fromMap(rows.first);
   }
 
   Future<void> checkOut(String visitorId) async {
@@ -67,10 +60,8 @@ class VisitorRepository {
       DemoStore.visitorCheckOut(visitorId);
       return;
     }
-
-    await powerSyncDb.execute(
-      'UPDATE visitors SET check_out_time = ? WHERE id = ?',
-      [_localTime(DateTime.now()), visitorId],
-    );
+    await _db.from('visitors').update({
+      'check_out_time': _localTime(DateTime.now()),
+    }).eq('id', visitorId);
   }
 }
