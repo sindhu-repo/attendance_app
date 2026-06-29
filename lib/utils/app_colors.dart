@@ -8,6 +8,7 @@ abstract final class AppColors {
   // ── Module accents ─────────────────────────────────────────────────────────
   static const Color employee = Color(0xFF4F46E5); // Indigo
   static const Color visitor  = Color(0xFF0891B2); // Cyan-600
+  static const Color admin    = Color(0xFF7C3AED); // Violet-600
   static const Color signOut  = Color(0xFFDC2626); // Red-600
   static const Color success  = Color(0xFF16A34A); // Green-600
 

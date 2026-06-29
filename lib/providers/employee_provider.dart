@@ -24,6 +24,7 @@ class EmployeeProvider extends ChangeNotifier {
   Attendance? get todayAttendance => _todayAttendance;
   String get errorMessage => _errorMessage;
   bool get isProcessing => _isProcessing;
+  bool get isAdmin => _employee?.isAdmin ?? false;
 
   /// True when no sign-in record exists for today.
   bool get canSignIn =>

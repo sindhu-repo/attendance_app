@@ -7,6 +7,9 @@ import '../utils/app_config.dart';
 class EmployeeRepository {
   final _db = Supabase.instance.client;
 
+  static const _cols =
+      'employee_id, employee_name, department, designation, role';
+
   Future<List<Employee>> searchByName(String query) async {
     if (AppConfig.demoMode) {
       await Future.delayed(const Duration(milliseconds: 200));
@@ -15,7 +18,7 @@ class EmployeeRepository {
     final q = query.trim();
     final rows = await _db
         .from('employees')
-        .select('employee_id, employee_name, department, designation')
+        .select(_cols)
         .or('employee_name.ilike.%$q%,employee_id.ilike.%$q%')
         .limit(10);
     return rows.map((r) => Employee.fromMap(r)).toList();
@@ -26,9 +29,7 @@ class EmployeeRepository {
       await Future.delayed(const Duration(milliseconds: 200));
       return DemoStore.searchByName('');
     }
-    final rows = await _db
-        .from('employees')
-        .select('employee_id, employee_name, department, designation');
+    final rows = await _db.from('employees').select(_cols);
     return rows.map((r) => Employee.fromMap(r)).toList();
   }
 
@@ -40,7 +41,7 @@ class EmployeeRepository {
     final q = input.trim();
     final rows = await _db
         .from('employees')
-        .select('employee_id, employee_name, department, designation')
+        .select(_cols)
         .or('employee_name.ilike.%$q%,employee_id.ilike.%$q%')
         .limit(1);
     if (rows.isEmpty) return null;

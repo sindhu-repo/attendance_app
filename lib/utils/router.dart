@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../screens/admin/admin_dashboard_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/employee/employee_login_screen.dart';
@@ -39,6 +40,12 @@ class AppRouter {
         path: '/success',
         builder: (context, state) => SuccessScreen(
           message: state.extra as String? ?? 'Success!',
+        ),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => AdminDashboardScreen(
+          adminName: state.extra as String? ?? 'Admin',
         ),
       ),
     ],

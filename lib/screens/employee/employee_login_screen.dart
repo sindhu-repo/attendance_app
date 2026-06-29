@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import '../../models/employee.dart';
 import '../../providers/employee_provider.dart';
+import '../admin/admin_login_dialog.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../utils/responsive.dart';
@@ -54,6 +55,15 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
   Future<void> _verify(EmployeeProvider p) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     await p.validateEmployee(_idCtrl.text.trim());
+    // Admin stays on this screen to sign in/out first;
+    // the "Open Admin Dashboard" button appears below once verified.
+  }
+
+  Future<void> _goToAdmin(EmployeeProvider p) async {
+    final name = p.employee?.employeeName ?? 'Admin';
+    final granted = await AdminLoginDialog.show(context);
+    if (!mounted || !granted) return;
+    context.go('/admin', extra: name);
   }
 
   Future<void> _signIn(EmployeeProvider p) async {
@@ -142,12 +152,18 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
                                       onSignIn: () => _signIn(provider),
                                       onSignOut: () => _signOut(provider),
                                       isCompact: isCompact,
+                                      onAdminDashboard: provider.isAdmin
+                                          ? () => _goToAdmin(provider)
+                                          : null,
                                     )
                                   : _NarrowVerifiedView(
                                       provider: provider,
                                       now: _now,
                                       onSignIn: () => _signIn(provider),
                                       onSignOut: () => _signOut(provider),
+                                      onAdminDashboard: provider.isAdmin
+                                          ? () => _goToAdmin(provider)
+                                          : null,
                                     )
                             else
                               isWide
@@ -327,16 +343,23 @@ class _NarrowVerifiedView extends StatelessWidget {
     required this.now,
     required this.onSignIn,
     required this.onSignOut,
+    this.onAdminDashboard,
   });
 
   final EmployeeProvider provider;
   final DateTime now;
   final VoidCallback onSignIn;
   final VoidCallback onSignOut;
+  final VoidCallback? onAdminDashboard;
 
   @override
-  Widget build(BuildContext context) =>
-      _VerifiedLayout(provider: provider, now: now, onSignIn: onSignIn, onSignOut: onSignOut);
+  Widget build(BuildContext context) => _VerifiedLayout(
+        provider: provider,
+        now: now,
+        onSignIn: onSignIn,
+        onSignOut: onSignOut,
+        onAdminDashboard: onAdminDashboard,
+      );
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -350,6 +373,7 @@ class _WideVerifiedView extends StatelessWidget {
     required this.onSignIn,
     required this.onSignOut,
     required this.isCompact,
+    this.onAdminDashboard,
   });
 
   final EmployeeProvider provider;
@@ -357,10 +381,16 @@ class _WideVerifiedView extends StatelessWidget {
   final VoidCallback onSignIn;
   final VoidCallback onSignOut;
   final bool isCompact;
+  final VoidCallback? onAdminDashboard;
 
   @override
-  Widget build(BuildContext context) =>
-      _VerifiedLayout(provider: provider, now: now, onSignIn: onSignIn, onSignOut: onSignOut);
+  Widget build(BuildContext context) => _VerifiedLayout(
+        provider: provider,
+        now: now,
+        onSignIn: onSignIn,
+        onSignOut: onSignOut,
+        onAdminDashboard: onAdminDashboard,
+      );
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -373,12 +403,14 @@ class _VerifiedLayout extends StatelessWidget {
     required this.now,
     required this.onSignIn,
     required this.onSignOut,
+    this.onAdminDashboard,
   });
 
   final EmployeeProvider provider;
   final DateTime now;
   final VoidCallback onSignIn;
   final VoidCallback onSignOut;
+  final VoidCallback? onAdminDashboard;
 
   @override
   Widget build(BuildContext context) {
@@ -473,6 +505,16 @@ class _VerifiedLayout extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         _ActionButton(provider: provider, onSignIn: onSignIn, onSignOut: onSignOut),
+        if (onAdminDashboard != null) ...[
+          const SizedBox(height: 10),
+          GradientButton(
+            label: 'Open Admin Dashboard',
+            icon: Icons.admin_panel_settings_rounded,
+            color: AppColors.admin,
+            onPressed: onAdminDashboard,
+            height: 44,
+          ),
+        ],
       ],
         ),
       ),
