@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/admin_auth_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../../providers/employee_provider.dart';
 import '../../utils/app_colors.dart';
@@ -14,7 +15,7 @@ import 'tabs/visitor_report_tab.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   final String adminName;
-  const AdminDashboardScreen({super.key, required this.adminName});
+  const AdminDashboardScreen({super.key, this.adminName = 'Admin'});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +23,9 @@ class AdminDashboardScreen extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) {
+          context.read<AdminAuthProvider>().logout();
           context.read<EmployeeProvider>().reset();
-          context.go('/employee');
+          context.go('/home');
         }
       },
       child: ChangeNotifierProvider(

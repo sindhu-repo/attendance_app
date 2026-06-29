@@ -8,7 +8,7 @@ class EmployeeRepository {
   final _db = Supabase.instance.client;
 
   static const _cols =
-      'employee_id, employee_name, department, designation, role';
+      'employee_id, employee_name, department, designation, role, email, mobile_number';
 
   Future<List<Employee>> searchByName(String query) async {
     if (AppConfig.demoMode) {

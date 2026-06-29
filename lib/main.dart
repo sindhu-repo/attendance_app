@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'providers/admin_auth_provider.dart';
 import 'providers/employee_provider.dart';
 import 'providers/visitor_provider.dart';
 import 'utils/app_theme.dart';
@@ -26,6 +27,7 @@ class AttendanceApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: AdminAuthProvider.instance),
         ChangeNotifierProvider(create: (_) => EmployeeProvider()),
         ChangeNotifierProvider(create: (_) => VisitorProvider()),
       ],

@@ -45,7 +45,8 @@ class AdminRepository {
   Future<List<Employee>> getAllEmployees() async {
     final rows = await _db
         .from('employees')
-        .select('employee_id, employee_name, department, designation, role')
+        .select(
+            'employee_id, employee_name, department, designation, role, email, mobile_number')
         .order('employee_name');
     return rows.map((r) => Employee.fromMap(r)).toList();
   }
@@ -56,6 +57,8 @@ class AdminRepository {
     String? department,
     String? designation,
     String role = 'employee',
+    String? email,
+    String? mobileNumber,
   }) async {
     await _db.from('employees').insert({
       'employee_id': employeeId,
@@ -63,6 +66,8 @@ class AdminRepository {
       if (department?.isNotEmpty == true) 'department': department,
       if (designation?.isNotEmpty == true) 'designation': designation,
       'role': role,
+      if (email?.isNotEmpty == true) 'email': email,
+      if (mobileNumber?.isNotEmpty == true) 'mobile_number': mobileNumber,
     });
   }
 
@@ -73,6 +78,8 @@ class AdminRepository {
     String? department,
     String? designation,
     required String role,
+    String? email,
+    String? mobileNumber,
   }) async {
     await _db.from('employees').update({
       'employee_id': employeeId,
@@ -80,6 +87,8 @@ class AdminRepository {
       'department': department?.isEmpty == true ? null : department,
       'designation': designation?.isEmpty == true ? null : designation,
       'role': role,
+      'email': email?.isEmpty == true ? null : email,
+      'mobile_number': mobileNumber?.isEmpty == true ? null : mobileNumber,
     }).eq('employee_id', originalId);
   }
 

@@ -95,6 +95,8 @@ class AdminProvider extends ChangeNotifier {
     String? department,
     String? designation,
     String role = 'employee',
+    String? email,
+    String? mobileNumber,
   }) async {
     try {
       await _repo.addEmployee(
@@ -103,6 +105,8 @@ class AdminProvider extends ChangeNotifier {
         department: department,
         designation: designation,
         role: role,
+        email: email,
+        mobileNumber: mobileNumber,
       );
       await loadEmployees();
       return true;
@@ -120,6 +124,8 @@ class AdminProvider extends ChangeNotifier {
     String? department,
     String? designation,
     required String role,
+    String? email,
+    String? mobileNumber,
   }) async {
     try {
       await _repo.updateEmployee(
@@ -129,6 +135,8 @@ class AdminProvider extends ChangeNotifier {
         department: department,
         designation: designation,
         role: role,
+        email: email,
+        mobileNumber: mobileNumber,
       );
       await loadEmployees();
       return true;

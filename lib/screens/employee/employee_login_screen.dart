@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 
 import '../../models/employee.dart';
 import '../../providers/employee_provider.dart';
-import '../admin/admin_login_dialog.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../utils/responsive.dart';
@@ -59,11 +58,8 @@ class _EmployeeLoginScreenState extends State<EmployeeLoginScreen> {
     // the "Open Admin Dashboard" button appears below once verified.
   }
 
-  Future<void> _goToAdmin(EmployeeProvider p) async {
-    final name = p.employee?.employeeName ?? 'Admin';
-    final granted = await AdminLoginDialog.show(context);
-    if (!mounted || !granted) return;
-    context.go('/admin', extra: name);
+  void _goToAdmin(EmployeeProvider p) {
+    context.go('/admin-login');
   }
 
   Future<void> _signIn(EmployeeProvider p) async {

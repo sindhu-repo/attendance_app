@@ -28,7 +28,7 @@ class _EmployeeManagementTabState extends State<EmployeeManagementTab> {
       context: context,
       builder: (_) => _EmployeeDialog(
         existing: existing,
-        onSave: (id, name, dept, desig, role) async {
+        onSave: (id, name, dept, desig, role, email, mobile) async {
           final ok = existing == null
               ? await p.addEmployee(
                   employeeId: id,
@@ -36,6 +36,8 @@ class _EmployeeManagementTabState extends State<EmployeeManagementTab> {
                   department: dept,
                   designation: desig,
                   role: role,
+                  email: email,
+                  mobileNumber: mobile,
                 )
               : await p.updateEmployee(
                   originalId: existing.employeeId,
@@ -44,6 +46,8 @@ class _EmployeeManagementTabState extends State<EmployeeManagementTab> {
                   department: dept,
                   designation: desig,
                   role: role,
+                  email: email,
+                  mobileNumber: mobile,
                 );
           if (!ok && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -235,7 +239,8 @@ class _EmployeeDialog extends StatefulWidget {
   const _EmployeeDialog({this.existing, required this.onSave});
   final Employee? existing;
   final Future<bool> Function(
-      String id, String name, String? dept, String? desig, String role) onSave;
+      String id, String name, String? dept, String? desig, String role,
+      String? email, String? mobile) onSave;
 
   @override
   State<_EmployeeDialog> createState() => _EmployeeDialogState();
@@ -245,33 +250,58 @@ class _EmployeeDialogState extends State<_EmployeeDialog> {
   final _formKey = GlobalKey<FormState>();
   late final _idCtrl =
       TextEditingController(text: widget.existing?.employeeId ?? '');
-  late final _nameCtrl =
-      TextEditingController(text: widget.existing?.employeeName ?? '');
+  late final _firstNameCtrl = TextEditingController(
+      text: widget.existing != null
+          ? _splitName(widget.existing!.employeeName).first
+          : '');
+  late final _lastNameCtrl = TextEditingController(
+      text: widget.existing != null
+          ? _splitName(widget.existing!.employeeName).last
+          : '');
   late final _deptCtrl =
       TextEditingController(text: widget.existing?.department ?? '');
   late final _desigCtrl =
       TextEditingController(text: widget.existing?.designation ?? '');
+  late final _emailCtrl =
+      TextEditingController(text: widget.existing?.email ?? '');
+  late final _mobileCtrl =
+      TextEditingController(text: widget.existing?.mobileNumber ?? '');
   late String _role = widget.existing?.role ?? 'employee';
   bool _saving = false;
+
+  static ({String first, String last}) _splitName(String fullName) {
+    final parts = fullName.trim().split(' ');
+    final first = parts.first;
+    final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+    return (first: first, last: last);
+  }
 
   @override
   void dispose() {
     _idCtrl.dispose();
-    _nameCtrl.dispose();
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _deptCtrl.dispose();
     _desigCtrl.dispose();
+    _emailCtrl.dispose();
+    _mobileCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _saving = true);
+    final firstName = _firstNameCtrl.text.trim();
+    final lastName = _lastNameCtrl.text.trim();
+    final fullName = lastName.isEmpty ? firstName : '$firstName $lastName';
     final ok = await widget.onSave(
       _idCtrl.text.trim(),
-      _nameCtrl.text.trim(),
+      fullName,
       _deptCtrl.text.trim().isEmpty ? null : _deptCtrl.text.trim(),
       _desigCtrl.text.trim().isEmpty ? null : _desigCtrl.text.trim(),
       _role,
+      _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+      _mobileCtrl.text.trim().isEmpty ? null : _mobileCtrl.text.trim(),
     );
     if (ok && mounted) Navigator.of(context).pop();
     if (mounted) setState(() => _saving = false);
@@ -302,24 +332,69 @@ class _EmployeeDialogState extends State<_EmployeeDialog> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _idCtrl,
-                decoration: InputDecoration(
-                  labelText: _role == 'admin'
-                      ? 'Employee ID (optional)'
-                      : 'Employee ID *',
+                decoration: const InputDecoration(
+                  labelText: 'Employee ID *',
                   isDense: true,
                 ),
                 validator: (v) =>
-                    _role != 'admin' && v?.trim().isEmpty == true
-                        ? 'Required'
-                        : null,
+                    v?.trim().isEmpty == true ? 'Required' : null,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _firstNameCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'First Name *', isDense: true),
+                      textCapitalization: TextCapitalization.words,
+                      validator: (v) =>
+                          v?.trim().isEmpty == true ? 'Required' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _lastNameCtrl,
+                      decoration: const InputDecoration(
+                          labelText: 'Last Name *', isDense: true),
+                      textCapitalization: TextCapitalization.words,
+                      validator: (v) =>
+                          v?.trim().isEmpty == true ? 'Required' : null,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _nameCtrl,
+                controller: _emailCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'Employee Name *', isDense: true),
-                validator: (v) =>
-                    v?.trim().isEmpty == true ? 'Required' : null,
+                    labelText: 'Email', isDense: true),
+                keyboardType: TextInputType.emailAddress,
+                validator: (v) {
+                  final val = v?.trim() ?? '';
+                  if (val.isEmpty) return null;
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(val)) {
+                    return 'Enter a valid email';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _mobileCtrl,
+                decoration: const InputDecoration(
+                    labelText: 'Mobile Number', isDense: true),
+                keyboardType: TextInputType.phone,
+                validator: (v) {
+                  final val = v?.trim() ?? '';
+                  if (val.isEmpty) return null;
+                  if (!RegExp(r'^\+?[\d\s\-]{7,15}$').hasMatch(val)) {
+                    return 'Enter a valid mobile number';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 12),
               TextFormField(

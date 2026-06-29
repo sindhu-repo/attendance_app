@@ -4,6 +4,8 @@ class Employee {
   final String? department;
   final String? designation;
   final String role;
+  final String? email;
+  final String? mobileNumber;
 
   bool get isAdmin => role == 'admin';
 
@@ -13,6 +15,8 @@ class Employee {
     this.department,
     this.designation,
     this.role = 'employee',
+    this.email,
+    this.mobileNumber,
   });
 
   factory Employee.fromMap(Map<String, dynamic> map) {
@@ -22,6 +26,8 @@ class Employee {
       department: map['department'] as String?,
       designation: map['designation'] as String?,
       role: map['role'] as String? ?? 'employee',
+      email: map['email'] as String?,
+      mobileNumber: map['mobile_number'] as String?,
     );
   }
 
@@ -31,6 +37,8 @@ class Employee {
     String? department,
     String? designation,
     String? role,
+    String? email,
+    String? mobileNumber,
   }) {
     return Employee(
       employeeId: employeeId ?? this.employeeId,
@@ -38,6 +46,8 @@ class Employee {
       department: department ?? this.department,
       designation: designation ?? this.designation,
       role: role ?? this.role,
+      email: email ?? this.email,
+      mobileNumber: mobileNumber ?? this.mobileNumber,
     );
   }
 
